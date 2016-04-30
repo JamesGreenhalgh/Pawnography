@@ -1,0 +1,2 @@
+# Pawnography
+Erlang chess tinkering
