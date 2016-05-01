@@ -20,13 +20,23 @@ print_new_board() ->
 test() ->
 	Board = ?NEW_BOARD,
 	pretty_print_board(Board),
-	get_square({d,1}, Board).
+	get_square({d,1}, Board),
+	NewBoard = move_piece(Board,{a,2},{a,4}), 
+	pretty_print_board(NewBoard).
+
+move_piece(Board, From, To) ->
+	FromPiece = get_square(From, Board),
+	lists:set(FromPiece, Board, co_ordinate_to_element(To)),
+	lists:set({}, Board, co_ordinate_to_element(From)).
 
 
 print_board(Board) ->
 	Sublists = [lists:sublist(Board, Start, 8) || Start <- lists:seq(1,64,8)],
-	[io:format("NOW IS BOARD:~n~p~n~n", [Row]) || Row <- Sublists].
+	io:format("NOW IS BOARD:~n", []),
+	[io:format("~n~p~n~n", [Row]) || Row <- Sublists].
 
+rotate_board(Board) ->
+	ok.
 
 pretty_print_piece({rook,   Colour}) -> io:format("R~s ", [colour_atom_to_string(Colour)]);
 pretty_print_piece({knight, Colour}) -> io:format("N~s ", [colour_atom_to_string(Colour)]);
@@ -45,10 +55,10 @@ colour_atom_to_string(Colour) ->
 		white -> "W";
 		black -> "B"
 	end.
-pretty_print_board(Board) ->
-	Sublists = [lists:sublist(lists:reverse(Board), Start, 8) || Start <- lists:seq(1,64,8)],
-	[pretty_print_rank(Rank) || Rank <- Sublists].
 
+pretty_print_board(Board) ->
+	Sublists = [lists:sublist(Board, Start, 8) || Start <- lists:reverse(lists:seq(1,64,8))],
+	[pretty_print_rank(Rank) || Rank <- Sublists].
 
 get_square(Coord,Board) -> lists:nth(co_ordinate_to_element(Coord), Board).
 
