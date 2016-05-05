@@ -14,14 +14,23 @@ test() ->
 	Board = ?NEW_BOARD,
 	pretty_print_board(Board),
 	From = {1,2}, To = {1,4},
-	is_valid_move(Board,From,To) andalso
-	pretty_print_board(move_piece(Board,From,To)),
-	From2 = {3,1}, To2 = {3,4},
-	is_valid_move(Board,From2,To2) andalso
-	pretty_print_board(move_piece(Board,From2,To2)).
+	NewBoard = is_valid_move(Board,white,From,To) andalso
+	move_piece(Board,From,To),
+	pretty_print_board(NewBoard),
+	From2 = {1,7}, To2 = {1,5},
+	is_valid_move(NewBoard,black,From2,To2) andalso
+	pretty_print_board(move_piece(NewBoard,From2,To2)).
  
-is_valid_move(Board, From, To) ->
-	% is from square empty?
+make_move([], white, From, To) ->
+	make_move(?NEW_BOARD, white, From, To);
+make_move(Board, Colour, From, To) ->
+	NewBoard = (is_valid_move(Board,Colour,From,To) andalso
+	move_piece(Board,From,To)),
+	pretty_print_board(NewBoard),
+	NewBoard.
+
+is_valid_move(Board, Colour, From, To) ->
+	% Get type and make sure colour matches
 	{Type, Colour} = get_square(From, Board),
 	% is destination empty, or contain enemy piece?
 	is_empty_or_enemy(Board, Colour, To) andalso
