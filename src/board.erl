@@ -13,13 +13,13 @@
 test() ->
 	Board = ?NEW_BOARD,
 	pretty_print_board(Board),
-	get_square({d,1}, Board),
-	From = {a,2},
-	To = {a,4},
-	NewBoard = move_piece(Board,From,To), 
-	is_straight(From, To),
-	pretty_print_board(NewBoard).
-
+	From = {1,2}, To = {1,4},
+	is_valid_move(Board,From,To) andalso
+	pretty_print_board(move_piece(Board,From,To)),
+	From2 = {3,1}, To2 = {3,4},
+	is_valid_move(Board,From2,To2) andalso
+	pretty_print_board(move_piece(Board,From2,To2)).
+ 
 is_valid_move(Board, From, To) ->
 	% is from square empty?
 	{Type, Colour} = get_square(From, Board),
@@ -49,34 +49,36 @@ is_not_blocked(Board, From, To) ->
 	% need to get all squares between diagonals
 	% need to get all squares between straights
 
-squares_are_empty(_ListOfSquares) -> true.
+squares_are_empty([]) -> true;
+squares_are_empty([X|RestOfSquares]) ->
+	case X of
+		{} -> squares_are_empty(RestOfSquares);
+		_ -> false
+	end.
 
 % Horizontal/vertical
 get_intermediate_squares({A,B}, {A,Y}) when B<Y ->
-	[{A,Z} || Z <- lists:seq(B,Y)];
+	[{A,Z} || Z <- lists:seq(B+1,Y-1)];
 get_intermediate_squares({A,B}, {A,Y}) ->
-	[{A,Z} || Z <- lists:reverse(lists:seq(B,Y))];
+	[{A,Z} || Z <- lists:reverse(lists:seq(B+1,Y-1))];
 get_intermediate_squares({A,B}, {X,B}) when A<X ->
-	[{Z,B} || Z <- lists:seq(A,X)];
+	[{Z,B} || Z <- lists:seq(A+1,X-1)];
 get_intermediate_squares({A,B}, {X,B}) ->
-	[{Z,B} || Z <- lists:reverse(lists:seq(A,X))];
+	[{Z,B} || Z <- lists:reverse(lists:seq(A+1,X-1))];
 % Diagonal
 get_intermediate_squares({A,B}, {X,Y}) when abs(X-A) =:= abs(B-Y) ->
-%	case {abs(X-A), abs(B-Y)} of
-%		{C,C} ->
-			FileList = case A<X of
-				true ->
-					lists:seq(A,X);
-				false ->
-					lists:reverse(lists:seq(X,A))
-			end,
-			RankList = case B<Y of
-				true ->
-					lists:seq(B,Y);
-				false ->
-					lists:reverse(lists:seq(Y,B))
-			end,
-%	end,
+	FileList = case A<X of
+		true ->
+			lists:seq(A+1,X-1);
+		false ->
+			lists:reverse(lists:seq(X+1,A-1))
+	end,
+	RankList = case B<Y of
+		true ->
+			lists:seq(B+1,Y-1);
+		false ->
+			lists:reverse(lists:seq(Y+1,B-1))
+	end,
 	lists:zip(FileList, RankList).
 	
 legal_move(Type, From, To) ->
@@ -94,7 +96,7 @@ legal_move(Type, From, To) ->
 
 is_empty_or_enemy(Board, Colour, To) ->
 	%Also checks if From=To
-	DestPiece = get_square(Board, To),
+	DestPiece = get_square(To, Board),
 	case DestPiece of
 		{} -> true;
 		{_, Colour} -> false;
@@ -102,7 +104,7 @@ is_empty_or_enemy(Board, Colour, To) ->
 	end.
 
 is_diagonal({A,B},{X,Y}) ->
-	case {abs(file_to_integer(X) - file_to_integer(A)), abs(Y-B)} of
+	case {abs(X-A), abs(Y-B)} of
 		{C,C} -> true;
 		_ -> false
 	end.
@@ -115,7 +117,7 @@ is_straight(From, To) ->
 	end.
 
 is_horsie({A,B}, {X,Y}) ->
-	case {abs(file_to_integer(X) - file_to_integer(A)), abs(Y-B)} of
+	case {abs(X - A), abs(Y-B)} of
 		{2,1} -> true;
 		{1,2} -> true;
 		_ -> false
@@ -148,15 +150,26 @@ pretty_print_rank(Rank) ->
 	io:format("~n", []).
 
 pretty_print_board(Board) ->
+	io:format("-------------------------~n", []),
 	Sublists = [lists:sublist(Board, Start, 8) || Start <- lists:reverse(lists:seq(1,64,8))],
-	[pretty_print_rank(Rank) || Rank <- Sublists].
+	[pretty_print_rank(Rank) || Rank <- Sublists],
+	io:format("a--b--c--d--e--f--g--h--~n", []).
 
 get_square(Coord,Board) -> lists:nth(co_ordinate_to_element(Coord), Board).
 
-co_ordinate_to_element({File,Rank}) -> (Rank-1) * 8 + file_to_integer(File).
+co_ordinate_to_element({File,Rank}) -> (Rank-1) * 8 + File.
 
 colour_atom_to_string(white) -> "W";
 colour_atom_to_string(black) -> "B".
+
+int_to_file(1) -> a;
+int_to_file(2) -> b;
+int_to_file(3) -> c;
+int_to_file(4) -> d;
+int_to_file(5) -> e;
+int_to_file(6) -> f;
+int_to_file(7) -> g;
+int_to_file(8) -> h.
 
 file_to_integer(a) -> 1;
 file_to_integer(b) -> 2;
