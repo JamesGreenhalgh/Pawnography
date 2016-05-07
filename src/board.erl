@@ -10,19 +10,33 @@
 	{pawn, black}, {pawn, black}, {pawn, black}, {pawn, black}, {pawn, black}, {pawn, black}, {pawn, black}, {pawn, black}, 
 	{rook, black}, {knight, black}, {bishop, black}, {queen, black}, {king, black}, {bishop, black}, {knight, black}, {rook,black}]).
 
+-define(TEST_MOVES, [
+	{white, {c,2}, {c,4}},
+	{black, {c,7}, {c,5}},
+	{white, {b,1}, {c,3}},
+	{black, {b,8}, {c,6}}
+	]).
+
 test() ->
 	Board = ?NEW_BOARD,
-	pretty_print_board(Board),
-	From = {1,2}, To = {1,4},
-	NewBoard = is_valid_move(Board,white,From,To) andalso
-	move_piece(Board,From,To),
-	pretty_print_board(NewBoard),
-	From2 = {1,7}, To2 = {1,5},
-	is_valid_move(NewBoard,black,From2,To2) andalso
-	pretty_print_board(move_piece(NewBoard,From2,To2)).
+	NewBoard = make_move(Board, white, {c,2}, {c,4}),
+	NewBoard2 = make_move(NewBoard, black, {c,7}, {c,5}),
+	NewBoard3 = make_move(NewBoard2, white, {c,7}, {c,5}),
+|| {Colour, From, To} <- ?TEST_MOVES]
+
+%	pretty_print_board(Board),
+%	From = {1,2}, To = {1,4},
+%	NewBoard = is_valid_move(Board,white,From,To) andalso
+%	move_piece(Board,From,To),
+%	pretty_print_board(NewBoard),
+%	From2 = {1,7}, To2 = {1,5},
+%	is_valid_move(NewBoard,black,From2,To2) andalso
+%	pretty_print_board(move_piece(NewBoard,From2,To2)).
  
 make_move([], white, From, To) ->
 	make_move(?NEW_BOARD, white, From, To);
+make_move(Board, Colour, {A,B}, {X,Y}) when is_atom(A), is_atom(X) ->
+	make_move(Board, Colour, {file_to_int(A),B}, {file_to_int(X)});
 make_move(Board, Colour, From, To) ->
 	NewBoard = (is_valid_move(Board,Colour,From,To) andalso
 	move_piece(Board,From,To)),
