@@ -1,5 +1,6 @@
 -module(board).
--compile(export_all).
+-export([make_move/4, get_board/0, test/0, pretty_print_board/1]).
+%-compile(export_all).
 -define(NEW_BOARD, [
 	{rook, white}, {knight, white}, {bishop, white}, {queen, white}, {king, white}, {bishop, white}, {knight, white}, {rook,white},
 	{pawn, white}, {pawn, white}, {pawn, white}, {pawn, white}, {pawn, white}, {pawn, white}, {pawn, white}, {pawn, white}, 
@@ -17,41 +18,36 @@
 	{black, {b,8}, {c,6}}
 	]).
 
-test() ->
-	Board = ?NEW_BOARD,
-	NewBoard = make_move(Board, white, {c,2}, {c,4}),
-	NewBoard2 = make_move(NewBoard, black, {c,7}, {c,5}),
-	NewBoard3 = make_move(NewBoard2, white, {c,7}, {c,5}),
-|| {Colour, From, To} <- ?TEST_MOVES]
+get_board() -> ?NEW_BOARD.
 
-%	pretty_print_board(Board),
-%	From = {1,2}, To = {1,4},
-%	NewBoard = is_valid_move(Board,white,From,To) andalso
-%	move_piece(Board,From,To),
-%	pretty_print_board(NewBoard),
-%	From2 = {1,7}, To2 = {1,5},
-%	is_valid_move(NewBoard,black,From2,To2) andalso
-%	pretty_print_board(move_piece(NewBoard,From2,To2)).
- 
+test() ->
+	lists:foldl(fun({Colour, From, To}, Board) -> make_move(Board, Colour, From, To) end, ?NEW_BOARD, ?TEST_MOVES).
+	%lists:foldl(fun(X, Sum) -> X + Sum end, 0, [1,2,3,4,5]).
+
 make_move([], white, From, To) ->
 	make_move(?NEW_BOARD, white, From, To);
 make_move(Board, Colour, {A,B}, {X,Y}) when is_atom(A), is_atom(X) ->
-	make_move(Board, Colour, {file_to_int(A),B}, {file_to_int(X)});
+	make_move(Board, Colour, {file_to_integer(A),B}, {file_to_integer(X),Y});
 make_move(Board, Colour, From, To) ->
-	NewBoard = (is_valid_move(Board,Colour,From,To) andalso
-	move_piece(Board,From,To)),
-	pretty_print_board(NewBoard),
-	NewBoard.
+	case is_valid_move(Board,Colour,From,To) of 
+		{false, Description} ->
+			{badmove, Description};
+		true ->
+			{ok, move_piece(Board,From,To)}
+	end.
 
 is_valid_move(Board, Colour, From, To) ->
 	% Get type and make sure colour matches
-	{Type, Colour} = get_square(From, Board),
+	{Type, FromColour} = get_square(From, Board),
+	is_my_piece(FromColour, Colour) andalso
 	% is destination empty, or contain enemy piece?
 	is_empty_or_enemy(Board, Colour, To) andalso
 	% is the to location potentially legal??
 	legal_move(Type, From, To) andalso
 	is_not_blocked(Board, From, To).
 
+is_my_piece(FromColour, Colour) when FromColour =:= Colour -> true;
+is_my_piece(_,_) -> {false, not_your_piece}.
 
 is_not_blocked(Board, From, To) ->
 	case get_square(From, Board) of
@@ -76,7 +72,7 @@ squares_are_empty([]) -> true;
 squares_are_empty([X|RestOfSquares]) ->
 	case X of
 		{} -> squares_are_empty(RestOfSquares);
-		_ -> false
+		_ -> {false, path_blocked}
 	end.
 
 % Horizontal/vertical
@@ -122,28 +118,28 @@ is_empty_or_enemy(Board, Colour, To) ->
 	DestPiece = get_square(To, Board),
 	case DestPiece of
 		{} -> true;
-		{_, Colour} -> false;
+		{_, Colour} -> {false, own_piece_at_destination};
 		{_, _} -> true
 	end.
 
 is_diagonal({A,B},{X,Y}) ->
 	case {abs(X-A), abs(Y-B)} of
 		{C,C} -> true;
-		_ -> false
+		_ -> {false, not_diagonal}
 	end.
 
 is_straight(From, To) ->
 	case {From, To} of
 		{{X,_},{X,_}} -> true;
 		{{_,Y},{_,Y}} -> true;
-		_ -> false
+		_ -> {false, not_straight}
 	end.
 
 is_horsie({A,B}, {X,Y}) ->
 	case {abs(X - A), abs(Y-B)} of
 		{2,1} -> true;
 		{1,2} -> true;
-		_ -> false
+		_ -> {false, not_horsie}
 	end.
 
 move_piece(Board, From, To) ->
@@ -155,10 +151,10 @@ replace_nth(List, Index, NewValue) ->
 	{Front, [_|Back]} = lists:split(Index-1, List),
 	Front ++ [NewValue] ++ Back.
 
-print_board(Board) ->
-	Sublists = [lists:sublist(Board, Start, 8) || Start <- lists:seq(1,64,8)],
-	io:format("NOW IS BOARD:~n", []),
-	[io:format("~n~p~n~n", [Row]) || Row <- Sublists].
+%print_board(Board) ->
+%	Sublists = [lists:sublist(Board, Start, 8) || Start <- lists:seq(1,64,8)],
+%	io:format("NOW IS BOARD:~n", []),
+%	[io:format("~n~p~n~n", [Row]) || Row <- Sublists].
 
 pretty_print_piece({rook,   Colour}) -> io:format("R~s ", [colour_atom_to_string(Colour)]);
 pretty_print_piece({knight, Colour}) -> io:format("N~s ", [colour_atom_to_string(Colour)]);
@@ -179,21 +175,17 @@ pretty_print_board(Board) ->
 	io:format("a--b--c--d--e--f--g--h--~n", []).
 
 get_square(Coord,Board) -> lists:nth(co_ordinate_to_element(Coord), Board).
-
 co_ordinate_to_element({File,Rank}) -> (Rank-1) * 8 + File.
-
 colour_atom_to_string(white) -> "W";
 colour_atom_to_string(black) -> "B".
-
-int_to_file(1) -> a;
-int_to_file(2) -> b;
-int_to_file(3) -> c;
-int_to_file(4) -> d;
-int_to_file(5) -> e;
-int_to_file(6) -> f;
-int_to_file(7) -> g;
-int_to_file(8) -> h.
-
+%int_to_file(1) -> a;
+%int_to_file(2) -> b;
+%int_to_file(3) -> c;
+%int_to_file(4) -> d;
+%int_to_file(5) -> e;
+%int_to_file(6) -> f;
+%int_to_file(7) -> g;
+%int_to_file(8) -> h.
 file_to_integer(a) -> 1;
 file_to_integer(b) -> 2;
 file_to_integer(c) -> 3;
