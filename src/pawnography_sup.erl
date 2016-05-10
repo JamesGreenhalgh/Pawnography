@@ -23,5 +23,6 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    {ok, { {one_for_one, 5, 10}, []} }.
+	ChildSpec = [{game,{game,start_link,[]},permanent,5000,worker,[game]}],
+	{ok, {{one_for_one, 5, 10}, ChildSpec}}.
 

@@ -1,6 +1,6 @@
 {application, pawnography,
  [
-  {description, ""},
+  {description, "Chess engine"},
   {vsn, "1"},
   {registered, []},
   {applications, [

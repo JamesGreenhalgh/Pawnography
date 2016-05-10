@@ -6,11 +6,11 @@
 
 start_link() -> gen_server:start_link(?MODULE, [], []).
 init([]) -> 
-	io:format("Game server started. Pid:~p", [self()]),
+	io:format("Game server started. Pid:~p~n", [self()]),
 	{ok, []}.
 
 terminate(Reason, State) -> 
-	io:format("Terminate!!~p", [Reason]),
+	io:format("Terminate!!~p~n", [Reason]),
 	{ok, State}.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
@@ -24,14 +24,14 @@ get_board(Pid) -> gen_server:cast(Pid, {board}).
 handle_call({start, Player1, Player2}, _From, []) -> {reply, {ok, started}, make_game(Player1, Player2)};
 handle_call(terminate, _From, State) -> {stop, normal, ok, State};
 handle_call({turn, Move}, {Player, _}, State) when Player == State#game.next_player ->
-	io:format("IN TURN>PLAYER:~p~nMove:~p",[Player, Move]),
+	io:format("Game engine log: PLAYER:~pMove:~p",[Player, Move]),
 	{From, To} = Move,
 	case board:make_move(State#game.board, colour_atom(State), From, To) of
 		{ok, Board} -> 
 			%% IS THIS A RACE CONDITION???
-			io:format("Board:~p~nMove:~p",[Board, Move]),
-			player:update_player(State#game.next_player, Move, Board, State#game.next_player),
-			io:format("After update player:~p~nMove:~p",[Board, Move]),
+			%io:format("Board:~p~nMove:~p",[Board, Move]),
+			player:update_player(opposite_colour(State), Move, Board, opposite_colour(State)),
+			%io:format("After update player:~p~nMove:~p",[Board, Move]),
 			{reply,{ok,Board},State#game{
 					board=Board, 
 					next_player=opposite_colour(State),

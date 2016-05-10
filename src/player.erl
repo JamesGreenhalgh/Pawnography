@@ -38,15 +38,15 @@ handle_call(WTF, From, State) ->
 	io:format("Received handle call ~p~nFrom:~p", [WTF,From]),
 	{reply, ok, State}.
 
-handle_cast({update, Move, Board, NextPlayer}, State) when NextPlayer =:= self() ->
+handle_cast({update, Move, Board, NextPlayer}, State) when NextPlayer =:= self(); length(State#player.moves_to_make) > State#player.turn ->
 	board:pretty_print_board(Board),
 	% Check previous move against movelist
 	OpponentMove = lists:nth(State#player.turn-1, State#player.moves_to_make),
-	io:format("Moves:~nOne in list~pMade by player~p~n",[OpponentMove, Move]),
+	%io:format("Moves:~nOne in list~pMade by player~p~n",[OpponentMove, Move]),
 	OpponentMove = Move,
 	% Make move from list
-	{ok, Board} = game:take_turn(State#player.game_pid, lists:nth(State#player.turn, State#player.moves_to_make)),
-	{noreply, State#player{board=Board,turn=State#player.turn+2}};
+	{ok, NewBoard} = game:take_turn(State#player.game_pid, lists:nth(State#player.turn, State#player.moves_to_make)),
+	{noreply, State#player{board=NewBoard,turn=State#player.turn+2}};
 
 handle_cast({test, ListOfMoves}, State) when State =/= [] ->
 	case State#player.colour of
