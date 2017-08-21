@@ -42,7 +42,7 @@ handle_cast({update, Move, Board, NextPlayer}, State) when NextPlayer =:= self()
 	board:pretty_print_board(Board),
 	% Check previous move against movelist
 	OpponentMove = lists:nth(State#player.turn-1, State#player.moves_to_make),
-	io:format("Moves:~nOne in list~pMade by player~p~n",[OpponentMove, Move]),
+	io:format("Moves:~nOne in list~pMade by player~p~nTurn:~p~n",[OpponentMove, Move, State#player.turn-1]),
 	OpponentMove = Move,
 	% Make move from list
 	{ok, Board} = game:take_turn(State#player.game_pid, lists:nth(State#player.turn, State#player.moves_to_make)),
