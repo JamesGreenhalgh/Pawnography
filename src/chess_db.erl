@@ -18,7 +18,7 @@ foo() ->
 
 create_chess_db() ->
 	{ok, Client} = cqerl:get_client({}),
-	{ok, Result} = cqerl:run_query(Client, 
+	{ok, _Result} = cqerl:run_query(Client, 
 		"CREATE KEYSPACE IF NOT EXISTS chess_db WITH REPLICATION = {'class' : 'NetworkTopologyStrategy', 'datacenter1' :3};"),
 	{ok, _} = cqerl:run_query(Client, 
 		"USE chess_db;"),
@@ -31,5 +31,5 @@ create_chess_db() ->
 		finish tuple<varchar, int>, 
 		PRIMARY KEY(game_id, timestamp));").
 	
-insert_move(_Game, _Player, From, To) ->
+insert_move(_Game, _Player, _From, _To) ->
 	foo.
